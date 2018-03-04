@@ -5,7 +5,9 @@ import ntpath
 from keras.preprocessing import image
 from tqdm import tqdm
 from PIL import Image
-import tensorflow
+import cv2
+import matplotlib.pyplot as plt
+
 
 ntpath.basename("a/b/c")
 
@@ -47,8 +49,8 @@ def pad_image(old_im, new_size):
     """
     old_size = old_im.size
     new_im = Image.new('RGB', new_size)
-    new_im.paste(old_im, ((new_size[0] - old_size[0]) / 2,
-                          (new_size[1] - old_size[1]) / 2))
+    new_im.paste(old_im, ((new_size[0] - old_size[0]) // 2,
+                          (new_size[1] - old_size[1]) // 2))
 
     return new_im
 
@@ -78,7 +80,19 @@ def paths_to_tensor(img_paths):
     return np.vstack(list_of_tensors)
 
 
-# TODO implement target merging function
+def sum_masks(entry):
+    """
+
+    :param entry: dictionary entry for which to sum masks
+    :return: summed cv2 image
+    """
+    image_sum = cv2.imread(entry[0])
+
+    for i in range(1, len(entry)):
+        image_to_add = cv2.imread(entry[i])
+        image_sum = cv2.bitwise_or(image_sum, image_to_add)
+
+    return image_sum
 
 
 # Glob the training data
@@ -114,7 +128,19 @@ nn_image_size = [nn_image_side, nn_image_side]
 
 print("Formatted training data into dictionary. \n")
 
+img_tensor = path_to_tensor(training_paths[1], [1040, 1040])
+
+
 # TODO merge targets
+training_image = cv2.imread(next(iter (training_dict.keys())))
+test_image = sum_masks(next (iter (training_dict.values())))
+fig = plt.figure()
+fig.add_subplot(1,1,1)
+plt.imshow(training_image)
+fig.add_subplot(2,1,1)
+plt.imshow(test_image)
+plt.show()
+
 
 # TODO pad images with black
 
